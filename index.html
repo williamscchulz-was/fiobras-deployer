@@ -5,24 +5,19 @@
   ╔═══════════════════════════════════════════════════════════════╗
   ║  FIOBRAS DEPLOYER — CHANGELOG                                ║
   ╠═══════════════════════════════════════════════════════════════╣
+  ║  v1.4.0  31/03/2026  Login + Firebase sync completo           ║
+  ║    • Tela de login (usuario/senha via Firebase)               ║
+  ║    • Token, histórico e projetos sincronizados                ║
+  ║    • Botão logout no header                                   ║
+  ║    • Credenciais padrão: admin/optimizer                      ║
+  ║  v1.3.0  31/03/2026  Token sincronizado via Firebase          ║
   ║  v1.2.0  31/03/2026  Auto-extração de commit message         ║
-  ║    • Extrai versão e descrição do changelog do HTML           ║
-  ║    • Adiciona data/hora automaticamente                       ║
-  ║    • Fallback: busca version-badge ou hdr-pill               ║
   ║  v1.1.0  31/03/2026  Seletor de projetos                     ║
-  ║    • 4 projetos pré-cadastrados (maintenance, crm,            ║
-  ║      dashboard, pricing)                                      ║
-  ║    • Cards visuais para seleção rápida                        ║
-  ║    • Gerenciamento de projetos (adicionar/remover)            ║
   ║  v1.0.0  31/03/2026  Versão inicial                          ║
-  ║    • Publicação via GitHub REST API                           ║
-  ║    • Upload ou cola de HTML + histórico                       ║
-  ║    • PWA instalável + dark mode                               ║
-  ║    • Padrão FIOBRAS_BASE v2.0                                 ║
   ╚═══════════════════════════════════════════════════════════════╝
 -->
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <title>Fiobras · Deployer</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="application-name" content="Fiobras Deployer">
@@ -91,7 +86,7 @@ body{background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;fon
 .field-hint{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted2);margin-top:4px;line-height:1.6}
 .input-wrap{display:flex;align-items:center;background:var(--input-bg);border:1.5px solid var(--input-border);border-radius:8px;overflow:hidden;transition:border-color .2s,box-shadow .2s}
 .input-wrap:focus-within{border-color:var(--green);box-shadow:0 0 0 3px var(--input-glow)}
-.input-pfx{padding:10px;font-family:'DM Mono',monospace;font-size:.72rem;color:var(--green);background:rgba(0,136,53,.08);border-right:1.5px solid var(--input-border);white-space:nowrap}
+.input-pfx{padding:10px;font-family:'DM Mono',monospace;font-size:.72rem;color:var(--green);background:rgba(0,136,53,.08);border-right:1.5px solid var(--input-border);white-space:nowrap;display:flex;align-items:center}
 .input-wrap input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Mono',monospace;font-size:.82rem;padding:10px 12px;min-width:0}
 textarea.code-area{width:100%;min-height:180px;max-height:50vh;background:var(--input-bg);border:1.5px solid var(--input-border);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:.72rem;line-height:1.6;padding:14px;resize:vertical;outline:none;transition:border-color .2s,box-shadow .2s}
 textarea.code-area:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--input-glow)}
@@ -123,7 +118,6 @@ textarea.code-area::placeholder{color:var(--muted2)}
 .spinner{width:16px;height:16px;border:2px solid rgba(26,18,0,.2);border-top-color:#1a1200;border-radius:50%;animation:spin .6s linear infinite;display:none}
 .btn.loading .spinner{display:block}.btn.loading .btn-text{display:none}
 @keyframes spin{to{transform:rotate(360deg)}}
-/* ── Commit preview ── */
 .commit-preview{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:16px;display:none}
 .commit-preview.vis{display:block}
 .commit-preview-label{font-family:'Poppins',sans-serif;font-size:.58rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted2);margin-bottom:6px;display:flex;align-items:center;gap:6px}
@@ -132,6 +126,18 @@ textarea.code-area::placeholder{color:var(--muted2)}
 .commit-preview-source{font-family:'DM Mono',monospace;font-size:.55rem;color:var(--muted2);margin-top:6px}
 .commit-edit-btn{font-family:'Poppins',sans-serif;font-size:.55rem;font-weight:600;color:var(--blue);cursor:pointer;background:none;border:none;padding:2px 6px;border-radius:3px;margin-left:auto;transition:background .15s}
 .commit-edit-btn:hover{background:rgba(0,118,190,.08)}
+/* ── Login screen ── */
+.login-screen{position:fixed;inset:0;z-index:8000;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:opacity .4s,visibility .4s}
+.login-screen.hide{opacity:0;visibility:hidden;pointer-events:none}
+.login-box{width:340px;max-width:90vw;text-align:center}
+.login-logo{font-family:'Outfit',sans-serif;font-size:2rem;font-weight:800;color:var(--green);letter-spacing:1.5px;margin-bottom:4px}
+.login-sub{font-family:'DM Mono',monospace;font-size:.56rem;letter-spacing:4px;text-transform:uppercase;color:var(--muted2);margin-bottom:32px}
+.login-card{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:28px;box-shadow:var(--shadow-sm)}
+[data-theme="dark"] .login-card{box-shadow:none}
+.login-error{font-family:'Poppins',sans-serif;font-size:.7rem;color:var(--red);margin-top:12px;display:none}
+.login-error.vis{display:block}
+.app-content{display:none}
+.app-content.vis{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
 .footer{background:var(--surface);border-top:1px solid var(--border);padding:0 24px;height:44px;display:flex;align-items:center;justify-content:space-between;margin-top:auto}
 [data-theme="dark"] .footer{background:var(--surface);border-color:var(--border)}
 .footer-brand{font-family:'Poppins',sans-serif;font-size:.72rem;font-weight:700;color:var(--green)}
@@ -144,12 +150,42 @@ textarea.code-area::placeholder{color:var(--muted2)}
 .modal{background:var(--surface);border:1.5px solid var(--border2);border-radius:14px;padding:28px;width:420px;max-width:92vw;box-shadow:0 24px 64px rgba(0,0,0,.25)}
 [data-theme="dark"] .modal{background:var(--surface);border-color:var(--border2)}
 .modal-title{font-family:'Poppins',sans-serif;font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:16px}
-@media(max-width:480px){.header{padding:0 16px}.main{padding:16px 14px 80px}.card{padding:16px}.footer{padding:0 14px}.footer-copy{display:none}textarea.code-area{min-height:140px;font-size:.68rem}.proj-card{padding:12px 12px 10px}}
+@media(max-width:480px){.header{padding:0 16px}.main{padding:16px 14px 80px}.card{padding:16px}.footer{padding:0 14px}.footer-copy{display:none}textarea.code-area{min-height:140px;font-size:.68rem}.proj-card{padding:12px 12px 10px}.login-box{max-width:88vw}}
 </style>
 </head>
 <body>
-<div class="splash" id="splash"><div class="splash-brand">FIOBRAS</div><div class="splash-sub">deployer</div><div class="splash-bar-wrap"><div class="splash-bar"></div></div><div class="splash-version">v1.2.0</div></div>
-<div class="header"><div class="hdr-left"><span class="hdr-brand">Fiobras</span><span class="hdr-system">Deployer</span></div><div class="hdr-right"><div class="version-badge">v1.2.0</div><button class="header-icon-btn" onclick="toggleTheme()" aria-label="Alternar tema"><svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg></button></div></div>
+<!-- Splash -->
+<div class="splash" id="splash"><div class="splash-brand">FIOBRAS</div><div class="splash-sub">deployer</div><div class="splash-bar-wrap"><div class="splash-bar"></div></div><div class="splash-version">v1.4.0</div></div>
+
+<!-- Login Screen -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">FIOBRAS</div>
+    <div class="login-sub">deployer</div>
+    <div class="login-card">
+      <div class="field">
+        <label class="field-label">Usuario</label>
+        <div class="input-wrap">
+          <div class="input-pfx"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <input type="text" id="loginUser" placeholder="usuario" autocomplete="username" autofocus>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Senha</label>
+        <div class="input-wrap">
+          <div class="input-pfx"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
+          <input type="password" id="loginPass" placeholder="senha" autocomplete="current-password">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()" style="margin-top:8px">Entrar</button>
+      <div class="login-error" id="loginError">Usuario ou senha incorretos</div>
+    </div>
+  </div>
+</div>
+
+<!-- App Content (hidden until login) -->
+<div class="app-content" id="appContent">
+<div class="header"><div class="hdr-left"><span class="hdr-brand">Fiobras</span><span class="hdr-system">Deployer</span></div><div class="hdr-right"><div class="version-badge">v1.4.0</div><button class="header-icon-btn" onclick="toggleTheme()" aria-label="Alternar tema"><svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg></button><button class="header-icon-btn" onclick="doLogout()" aria-label="Sair"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></div>
 <div class="main">
   <div class="sh"><h2>Token GitHub</h2><div class="sh-line"></div></div>
   <div class="card">
@@ -166,23 +202,14 @@ textarea.code-area::placeholder{color:var(--muted2)}
   <div class="card">
     <div class="field"><label class="field-label">Conteudo HTML</label><div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileUpload').click()"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><div class="upload-zone-text">Toque para selecionar arquivo</div><div class="upload-zone-hint">ou arraste e solte aqui</div><input type="file" id="fileUpload" accept=".html,.htm" style="display:none" onchange="handleFile(event)"></div></div>
     <div class="field"><label class="field-label">Ou cole o codigo</label><textarea class="code-area" id="codeArea" placeholder="&lt;!DOCTYPE html&gt;&#10;&lt;html&gt;&#10;  ...&#10;&lt;/html&gt;" spellcheck="false"></textarea><div class="char-count" id="charCount">0 caracteres</div></div>
-    <!-- Commit preview (auto-extracted) -->
     <div class="commit-preview" id="commitPreview">
-      <div class="commit-preview-label">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="1.05" y1="12" x2="7" y2="12"/><line x1="17.01" y1="12" x2="22.96" y2="12"/></svg>
-        Commit (extraido do HTML)
-        <button class="commit-edit-btn" onclick="editCommit()">editar</button>
-      </div>
+      <div class="commit-preview-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="1.05" y1="12" x2="7" y2="12"/><line x1="17.01" y1="12" x2="22.96" y2="12"/></svg> Commit (extraido do HTML)<button class="commit-edit-btn" onclick="editCommit()">editar</button></div>
       <div class="commit-preview-text" id="commitText">-</div>
       <div class="commit-preview-source" id="commitSource">-</div>
     </div>
-    <!-- Manual commit (hidden by default, shown on edit) -->
     <div class="field" id="commitManual" style="display:none">
       <label class="field-label">Commit (manual)</label>
-      <div class="input-wrap">
-        <div class="input-pfx"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="1.05" y1="12" x2="7" y2="12"/><line x1="17.01" y1="12" x2="22.96" y2="12"/></svg></div>
-        <input type="text" id="commitMsg" placeholder="deploy: versao x.x.x" autocomplete="off">
-      </div>
+      <div class="input-wrap"><div class="input-pfx"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="1.05" y1="12" x2="7" y2="12"/><line x1="17.01" y1="12" x2="22.96" y2="12"/></svg></div><input type="text" id="commitMsg" placeholder="deploy: versao x.x.x" autocomplete="off"></div>
       <div class="field-hint" style="cursor:pointer;color:var(--blue)" onclick="useAutoCommit()">Voltar para auto-extracao</div>
     </div>
     <button class="btn btn-yellow btn-full" id="deployBtn" onclick="deploy()" disabled><div class="spinner"></div><span class="btn-text"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-top:-2px"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg> Publicar</span></button>
@@ -190,33 +217,71 @@ textarea.code-area::placeholder{color:var(--muted2)}
   <div class="sh"><h2>Historico</h2><div class="sh-line"></div></div>
   <div class="card"><div class="empty-state" id="emptyHistory">Nenhum deploy realizado ainda.</div><div id="historyList"></div></div>
 </div>
-<div class="footer"><span class="footer-brand">Fiobras</span><span class="footer-copy">Deployer v1.2.0</span></div>
+<div class="footer"><span class="footer-brand">Fiobras</span><span class="footer-copy">Deployer v1.4.0</span></div>
+</div><!-- /app-content -->
+
 <div class="toast" id="toast"></div>
 <div class="modal-bg" id="modalAdd" onclick="if(event.target===this)this.classList.remove('open')"><div class="modal" role="dialog" aria-modal="true"><div class="modal-title">Novo Projeto</div><div class="field"><label class="field-label">Nome</label><div class="input-wrap"><input type="text" id="addName" placeholder="Meu App"></div></div><div class="field"><label class="field-label">Repositorio</label><div class="input-wrap"><div class="input-pfx">owner/repo</div><input type="text" id="addRepo" placeholder="fiobras/meu-app"></div></div><div class="field"><label class="field-label">Arquivo</label><div class="input-wrap"><div class="input-pfx">/</div><input type="text" id="addFile" value="index.html"></div></div><div class="field"><label class="field-label">Branch</label><div class="input-wrap"><input type="text" id="addBranch" value="main"></div></div><div style="display:flex;gap:10px;margin-top:16px"><button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('modalAdd').classList.remove('open')">Cancelar</button><button class="btn btn-primary" style="flex:1" onclick="addProject()">Adicionar</button></div></div></div>
 <div class="modal-bg" id="modalDel" onclick="if(event.target===this)this.classList.remove('open')"><div class="modal" role="dialog" aria-modal="true"><div class="modal-title">Remover Projeto</div><p style="font-size:.78rem;color:var(--muted);margin-bottom:16px">Tem certeza que deseja remover <strong id="delName">-</strong>?</p><div style="display:flex;gap:10px"><button class="btn btn-secondary" style="flex:1" onclick="document.getElementById('modalDel').classList.remove('open')">Cancelar</button><button class="btn btn-danger" style="flex:1" onclick="confirmDelete()">Remover</button></div></div></div>
+
 <script>
 /* ── PWA ── */
 (function(){var s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="42" fill="#008835"/><g transform="translate(96,96)" stroke="#fff" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="24,-40 40,-24 24,-8" transform="translate(-32,0)"/><path d="M-40,4V-8a16,16 0 0,1 16,-16h48" transform="translate(-32,0)"/><polyline points="-24,40 -40,24 -24,8" transform="translate(32,0)"/><path d="M40,-4V8a16,16 0 0,1-16,16h-48" transform="translate(32,0)"/></g></svg>';var u=URL.createObjectURL(new Blob([s],{type:'image/svg+xml'}));var m={name:"Fiobras Deployer",short_name:"Deployer",start_url:"./",scope:"./",display:"standalone",background_color:"#EDF2EE",theme_color:"#008835",icons:[{src:u,sizes:"192x192",type:"image/svg+xml",purpose:"any maskable"},{src:u,sizes:"512x512",type:"image/svg+xml",purpose:"any maskable"}]};document.getElementById('pwa-manifest').href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/json'}))})();
+
+/* ── Splash ── */
 setTimeout(function(){document.getElementById('splash').classList.add('hide')},2000);
 
 /* ── Theme ── */
-function applyTheme(d){document.documentElement.setAttribute('data-theme',d?'dark':'light');document.getElementById('themeIcon').innerHTML=d?'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>':'<path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>';localStorage.setItem('fbd_theme',d?'dark':'light')}
+function applyTheme(d){document.documentElement.setAttribute('data-theme',d?'dark':'light');var i=document.getElementById('themeIcon');if(i)i.innerHTML=d?'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>':'<path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/>';localStorage.setItem('fbd_theme',d?'dark':'light')}
 function toggleTheme(){applyTheme(document.documentElement.getAttribute('data-theme')!=='dark')}
 (function(){applyTheme(localStorage.getItem('fbd_theme')==='dark')})();
 
 /* ── Toast ── */
 function showToast(msg,type,ms){type=type||'ok';ms=ms||2800;var t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type+' show';clearTimeout(t._t);t._t=setTimeout(function(){t.className='toast '+type},ms)}
 
-/* ── Storage ── */
-var TK='fbd_token',PK='fbd_projects',HK='fbd_history',SK='fbd_sel';
+/* ── Storage keys ── */
+var TK='fbd_token',PK='fbd_projects',HK='fbd_history',SK='fbd_sel',LK='fbd_session';
 
-/* ── Icons ── */
+/* ── Firebase placeholder (set by module below) ── */
+window._fbSet=function(){};
+window._fbAuth=null;
+
+/* ══════════════════════════════════════════════════════════
+   LOGIN
+   ══════════════════════════════════════════════════════════ */
+function checkSession(){return localStorage.getItem(LK)==='active'}
+function showApp(){
+  document.getElementById('loginScreen').classList.add('hide');
+  document.getElementById('appContent').classList.add('vis');
+  renderToken();renderProjects();renderHist();
+}
+function doLogin(){
+  var user=document.getElementById('loginUser').value.trim().toLowerCase();
+  var pass=document.getElementById('loginPass').value;
+  var err=document.getElementById('loginError');
+  if(!window._fbAuth){
+    // Firebase not loaded yet, try local fallback
+    if(user==='admin'&&pass==='optimizer'){localStorage.setItem(LK,'active');showApp();return}
+    err.classList.add('vis');return;
+  }
+  // Check against Firebase
+  if(window._fbAuth.user===user&&window._fbAuth.pass===pass){
+    localStorage.setItem(LK,'active');err.classList.remove('vis');showApp();
+  }else{err.classList.add('vis')}
+}
+function doLogout(){localStorage.removeItem(LK);location.reload()}
+
+// Enter key on login fields
+document.getElementById('loginUser').addEventListener('keydown',function(e){if(e.key==='Enter'){document.getElementById('loginPass').focus()}});
+document.getElementById('loginPass').addEventListener('keydown',function(e){if(e.key==='Enter'){doLogin()}});
+
+/* ══════════════════════════════════════════════════════════
+   PROJECTS
+   ══════════════════════════════════════════════════════════ */
 var IC={maintenance:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>',crm:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',dashboard:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',pricing:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',def:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>'};
 var CL=['#e07820','#0076BE','#008835','#FFCB00','#8B5CF6','#EC4899'];
 function gIcon(n){var k=n.toLowerCase();if(k.indexOf('maint')>=0||k.indexOf('manut')>=0)return IC.maintenance;if(k.indexOf('crm')>=0)return IC.crm;if(k.indexOf('dash')>=0)return IC.dashboard;if(k.indexOf('pric')>=0)return IC.pricing;return IC.def}
 var DEFAULTS=[{id:'p1',name:'Manutencao',repo:'williamscchulz-was/manutencao',file:'index.html',branch:'main',color:'#e07820'},{id:'p2',name:'CRM',repo:'williamscchulz-was/fiobras-crm',file:'index.html',branch:'main',color:'#0076BE'},{id:'p3',name:'Dashboard',repo:'williamscchulz-was/fiobras-dashboard',file:'index.html',branch:'main',color:'#008835'},{id:'p4',name:'Pricing',repo:'williamscchulz-was/fiobras-price',file:'index.html',branch:'main',color:'#FFCB00'}];
-
-/* ── Projects ── */
 function getProjects(){try{var s=localStorage.getItem(PK);if(s)return JSON.parse(s)}catch(e){}localStorage.setItem(PK,JSON.stringify(DEFAULTS));return JSON.parse(JSON.stringify(DEFAULTS))}
 function saveProjects(p){localStorage.setItem(PK,JSON.stringify(p))}
 var selId=localStorage.getItem(SK)||null;
@@ -229,195 +294,126 @@ function renderProjects(){
 function selectProject(id){selId=id;localStorage.setItem(SK,id);renderProjects()}
 function clearSelection(){selId=null;localStorage.removeItem(SK);renderProjects();window.scrollTo({top:0,behavior:'smooth'})}
 function renderBanner(){var b=document.getElementById('selectedBanner');if(!selId){b.classList.remove('vis');return}var p=getProjects().find(function(x){return x.id===selId});if(!p){b.classList.remove('vis');return}document.getElementById('bannerName').textContent=p.name;document.getElementById('bannerRepo').textContent=p.repo+'/'+p.file+' ('+p.branch+')';b.classList.add('vis')}
-function openAddProject(){document.getElementById('addName').value='';document.getElementById('addRepo').value='fiobras/';document.getElementById('addFile').value='index.html';document.getElementById('addBranch').value='main';document.getElementById('modalAdd').classList.add('open')}
+function openAddProject(){document.getElementById('addName').value='';document.getElementById('addRepo').value='williamscchulz-was/';document.getElementById('addFile').value='index.html';document.getElementById('addBranch').value='main';document.getElementById('modalAdd').classList.add('open')}
 function addProject(){var name=document.getElementById('addName').value.trim(),repo=document.getElementById('addRepo').value.trim(),file=document.getElementById('addFile').value.trim()||'index.html',branch=document.getElementById('addBranch').value.trim()||'main';if(!name){showToast('Informe o nome','err');return}if(!repo||repo.indexOf('/')<0){showToast('Repo invalido (owner/repo)','err');return}var ps=getProjects();ps.push({id:'p'+Date.now(),name:name,repo:repo,file:file,branch:branch,color:CL[ps.length%CL.length]});saveProjects(ps);document.getElementById('modalAdd').classList.remove('open');renderProjects();showToast('Projeto adicionado: '+name)}
 var pendDel=null;
 function promptDel(id){var p=getProjects().find(function(x){return x.id===id});if(!p)return;pendDel=id;document.getElementById('delName').textContent=p.name;document.getElementById('modalDel').classList.add('open')}
 function confirmDelete(){if(!pendDel)return;saveProjects(getProjects().filter(function(x){return x.id!==pendDel}));if(selId===pendDel){selId=null;localStorage.removeItem(SK)}pendDel=null;document.getElementById('modalDel').classList.remove('open');renderProjects();showToast('Projeto removido','warn')}
 
-/* ── Token ── */
+/* ══════════════════════════════════════════════════════════
+   TOKEN (synced via Firebase)
+   ══════════════════════════════════════════════════════════ */
 function getToken(){return localStorage.getItem(TK)||''}
 function renderToken(){var t=getToken();if(t){document.getElementById('tokenSetup').style.display='none';document.getElementById('tokenSaved').style.display='block';document.getElementById('tokenMasked').textContent=t.substring(0,7)+'****'+t.substring(t.length-4)}else{document.getElementById('tokenSetup').style.display='block';document.getElementById('tokenSaved').style.display='none'}updateBtn()}
-function saveToken(){var v=document.getElementById('tokenInput').value.trim();if(!v){showToast('Cole o token','err');return}if(v.indexOf('ghp_')!==0&&v.indexOf('github_pat_')!==0){showToast('Token invalido','err');return}localStorage.setItem(TK,v);document.getElementById('tokenInput').value='';renderToken();showToast('Token salvo')}
-function removeToken(){localStorage.removeItem(TK);renderToken();showToast('Token removido','warn')}
+function saveToken(){var v=document.getElementById('tokenInput').value.trim();if(!v){showToast('Cole o token','err');return}if(v.indexOf('ghp_')!==0&&v.indexOf('github_pat_')!==0){showToast('Token invalido','err');return}localStorage.setItem(TK,v);window._fbSet('config/token',v);document.getElementById('tokenInput').value='';renderToken();showToast('Token salvo')}
+function removeToken(){localStorage.removeItem(TK);window._fbSet('config/token',null);renderToken();showToast('Token removido','warn')}
 function testToken(){var t=getToken();if(!t){showToast('Sem token','err');return}fetch('https://api.github.com/user',{headers:{'Authorization':'Bearer '+t,'Accept':'application/vnd.github+json'}}).then(function(r){if(r.ok)return r.json();throw new Error('HTTP '+r.status)}).then(function(d){showToast('Conectado: '+d.login)}).catch(function(e){showToast('Erro: '+e.message,'err')})}
 
 /* ══════════════════════════════════════════════════════════
-   AUTO-EXTRACT COMMIT MESSAGE FROM HTML
-   
-   Estratégias (em ordem de prioridade):
-   1. Changelog FIOBRAS_BASE: ║  vX.X.X  DD/MM/AAAA  Descrição  ║
-   2. version-badge ou hdr-pill no HTML
-   3. Fallback genérico
-   
-   Formato final: "vX.X.X · Descrição · DD/MM/AAAA HH:MM"
+   AUTO-EXTRACT COMMIT MESSAGE
    ══════════════════════════════════════════════════════════ */
-var autoCommit = null;    // resultado da extração
-var useManual = false;    // se o usuário editou manualmente
-
-function extractCommitFromHTML(html) {
-  var result = { version: null, description: null, source: null };
-  
-  // ── Estratégia 1: Changelog FIOBRAS_BASE ──
-  // Procura linhas tipo: ║  v1.2.0  31/03/2026  Descrição aqui  ║
-  var changelogMatch = html.match(/║\s+(v\d+\.\d+\.\d+)\s+\d{2}\/\d{2}\/\d{4}\s+(.+?)\s*║/);
-  if (changelogMatch) {
-    result.version = changelogMatch[1].trim();
-    result.description = changelogMatch[2].trim();
-    result.source = 'changelog';
-    return result;
-  }
-  
-  // ── Estratégia 2: version-badge ou hdr-pill ──
-  // Procura: class="version-badge">v1.2.0< ou class="hdr-pill">v0.8<
-  var badgeMatch = html.match(/class=["'](?:version-badge|hdr-pill)["'][^>]*>\s*(v[\d.]+)\s*</);
-  if (badgeMatch) {
-    result.version = badgeMatch[1].trim();
-    result.source = 'badge';
-    return result;
-  }
-  
-  // ── Estratégia 3: Qualquer vX.X.X em comentário HTML ──
-  var commentMatch = html.match(/<!--[\s\S]*?(v\d+\.\d+\.\d+)[\s\S]*?-->/);
-  if (commentMatch) {
-    result.version = commentMatch[1].trim();
-    result.source = 'comment';
-    return result;
-  }
-  
-  return result;
+var autoCommit=null,useManual=false;
+function extractCommitFromHTML(html){
+  var r={version:null,description:null,source:null};
+  var m=html.match(/\u2551\s+(v\d+\.\d+\.\d+)\s+\d{2}\/\d{2}\/\d{4}\s+(.+?)\s*\u2551/);
+  if(m){r.version=m[1].trim();r.description=m[2].trim();r.source='changelog';return r}
+  var b=html.match(/class=["'](?:version-badge|hdr-pill)["'][^>]*>\s*(v[\d.]+)\s*</);
+  if(b){r.version=b[1].trim();r.source='badge';return r}
+  var c=html.match(/<!--[\s\S]*?(v\d+\.\d+\.\d+)[\s\S]*?-->/);
+  if(c){r.version=c[1].trim();r.source='comment';return r}
+  return r
+}
+function getNow(){var d=new Date();return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+function buildCommitMessage(html){
+  var info=extractCommitFromHTML(html),parts=[];
+  if(info.version)parts.push(info.version);if(info.description)parts.push(info.description);parts.push(getNow());
+  var src='';if(info.source==='changelog')src='extraido do changelog FIOBRAS_BASE';else if(info.source==='badge')src='extraido do version-badge';else if(info.source==='comment')src='extraido de comentario HTML';else src='versao nao encontrada no HTML';
+  return{message:parts.join(' \u00B7 '),source:src,found:!!info.version}
+}
+function updateCommitPreview(){
+  var html=document.getElementById('codeArea').value,pv=document.getElementById('commitPreview'),mn=document.getElementById('commitManual');
+  if(!html.trim()){pv.classList.remove('vis');mn.style.display='none';autoCommit=null;return}
+  if(useManual){pv.classList.remove('vis');mn.style.display='block';return}
+  autoCommit=buildCommitMessage(html);document.getElementById('commitText').textContent=autoCommit.message;document.getElementById('commitSource').textContent=autoCommit.source;pv.classList.add('vis');mn.style.display='none'
+}
+function editCommit(){useManual=true;var m=autoCommit?autoCommit.message:'';document.getElementById('commitMsg').value=m;updateCommitPreview();document.getElementById('commitMsg').focus()}
+function useAutoCommit(){useManual=false;updateCommitPreview()}
+function getCommitMessage(){
+  if(useManual){var m=document.getElementById('commitMsg').value.trim();if(m)return m+' \u00B7 '+getNow()}
+  if(autoCommit&&autoCommit.message)return autoCommit.message;
+  var p=getProjects().find(function(x){return x.id===selId});return'deploy: '+(p?p.name.toLowerCase():'update')+' \u00B7 '+getNow()
 }
 
-function getNow() {
-  var d = new Date();
-  var dd = String(d.getDate()).padStart(2, '0');
-  var mm = String(d.getMonth() + 1).padStart(2, '0');
-  var yy = d.getFullYear();
-  var hh = String(d.getHours()).padStart(2, '0');
-  var mi = String(d.getMinutes()).padStart(2, '0');
-  return dd + '/' + mm + '/' + yy + ' ' + hh + ':' + mi;
-}
-
-function buildCommitMessage(html) {
-  var info = extractCommitFromHTML(html);
-  var parts = [];
-  
-  if (info.version) parts.push(info.version);
-  if (info.description) parts.push(info.description);
-  parts.push(getNow());
-  
-  var sourceLabel = '';
-  if (info.source === 'changelog') sourceLabel = 'extraido do changelog FIOBRAS_BASE';
-  else if (info.source === 'badge') sourceLabel = 'extraido do version-badge';
-  else if (info.source === 'comment') sourceLabel = 'extraido de comentario HTML';
-  else sourceLabel = 'versao nao encontrada no HTML';
-  
-  return {
-    message: parts.join(' · '),
-    source: sourceLabel,
-    found: !!info.version
-  };
-}
-
-function updateCommitPreview() {
-  var html = document.getElementById('codeArea').value;
-  var preview = document.getElementById('commitPreview');
-  var manual = document.getElementById('commitManual');
-  
-  if (!html.trim()) {
-    preview.classList.remove('vis');
-    manual.style.display = 'none';
-    autoCommit = null;
-    return;
-  }
-  
-  if (useManual) {
-    preview.classList.remove('vis');
-    manual.style.display = 'block';
-    return;
-  }
-  
-  autoCommit = buildCommitMessage(html);
-  document.getElementById('commitText').textContent = autoCommit.message;
-  document.getElementById('commitSource').textContent = autoCommit.source;
-  preview.classList.add('vis');
-  manual.style.display = 'none';
-}
-
-function editCommit() {
-  useManual = true;
-  var msg = autoCommit ? autoCommit.message : '';
-  document.getElementById('commitMsg').value = msg;
-  updateCommitPreview();
-  document.getElementById('commitMsg').focus();
-}
-
-function useAutoCommit() {
-  useManual = false;
-  updateCommitPreview();
-}
-
-function getCommitMessage() {
-  if (useManual) {
-    var manual = document.getElementById('commitMsg').value.trim();
-    if (manual) return manual + ' · ' + getNow();
-  }
-  if (autoCommit && autoCommit.message) return autoCommit.message;
-  // Fallback
-  var proj = getProjects().find(function(x){return x.id===selId});
-  return 'deploy: ' + (proj ? proj.name.toLowerCase() : 'update') + ' · ' + getNow();
-}
-
-/* ── File ── */
+/* ── File upload ── */
 var codeArea=document.getElementById('codeArea'),charCount=document.getElementById('charCount'),uploadZone=document.getElementById('uploadZone');
-codeArea.addEventListener('input',function(){
-  charCount.textContent=codeArea.value.length.toLocaleString('pt-BR')+' caracteres';
-  updateCommitPreview();
-  updateBtn();
-});
+codeArea.addEventListener('input',function(){charCount.textContent=codeArea.value.length.toLocaleString('pt-BR')+' caracteres';updateCommitPreview();updateBtn()});
 function handleFile(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){codeArea.value=ev.target.result;codeArea.dispatchEvent(new Event('input'));showToast('Arquivo: '+f.name)};r.readAsText(f)}
 uploadZone.addEventListener('dragover',function(e){e.preventDefault();uploadZone.classList.add('dragover')});
 uploadZone.addEventListener('dragleave',function(){uploadZone.classList.remove('dragover')});
 uploadZone.addEventListener('drop',function(e){e.preventDefault();uploadZone.classList.remove('dragover');var f=e.dataTransfer.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){codeArea.value=ev.target.result;codeArea.dispatchEvent(new Event('input'));showToast('Arquivo: '+f.name)};r.readAsText(f)});
 
 /* ── Deploy ── */
-function updateBtn(){document.getElementById('deployBtn').disabled=!(getToken()&&selId&&codeArea.value.trim().length>0)}
-
+function updateBtn(){var b=document.getElementById('deployBtn');if(b)b.disabled=!(getToken()&&selId&&codeArea.value.trim().length>0)}
 function deploy(){
   var token=getToken(),ps=getProjects(),proj=ps.find(function(x){return x.id===selId});
   if(!proj){showToast('Selecione um projeto','err');return}
   if(!token){showToast('Configure o token','err');return}
   if(!codeArea.value.trim()){showToast('Cole o conteudo','err');return}
-  var msg=getCommitMessage();
-  var btn=document.getElementById('deployBtn');btn.classList.add('loading');btn.disabled=true;
+  var msg=getCommitMessage(),btn=document.getElementById('deployBtn');btn.classList.add('loading');btn.disabled=true;
   var base='https://api.github.com/repos/'+proj.repo+'/contents/'+proj.file;
   var hd={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','Content-Type':'application/json'};
   fetch(base+'?ref='+proj.branch,{headers:hd}).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(existing){
-    var sha=existing?existing.sha:null;
-    var body={message:msg,content:btoa(unescape(encodeURIComponent(codeArea.value))),branch:proj.branch};
-    if(sha)body.sha=sha;
-    return fetch(base,{method:'PUT',headers:hd,body:JSON.stringify(body)});
+    var sha=existing?existing.sha:null;var body={message:msg,content:btoa(unescape(encodeURIComponent(codeArea.value))),branch:proj.branch};if(sha)body.sha=sha;
+    return fetch(base,{method:'PUT',headers:hd,body:JSON.stringify(body)})
   }).then(function(r){
     if(r.ok){r.json().then(function(d){showToast('Publicado: '+proj.name);addHist({project:proj.name,repo:proj.repo,file:proj.file,branch:proj.branch,message:msg,sha:(d.content&&d.content.sha)?d.content.sha.substring(0,7):'-',url:(d.content&&d.content.html_url)||'',time:new Date().toISOString(),status:'ok'})})}
     else{r.json().catch(function(){return{}}).then(function(e){showToast('Erro: '+(e.message||r.status),'err',4000);addHist({project:proj.name,repo:proj.repo,file:proj.file,branch:proj.branch,message:msg,sha:'-',url:'',time:new Date().toISOString(),status:'err'})})}
   }).catch(function(e){showToast('Erro: '+e.message,'err',4000)}).finally(function(){btn.classList.remove('loading');updateBtn()})
 }
 
-/* ── History ── */
+/* ── History (synced via Firebase) ── */
 function getHist(){try{return JSON.parse(localStorage.getItem(HK))||[]}catch(e){return[]}}
-function addHist(e){var h=getHist();h.unshift(e);if(h.length>20)h.length=20;localStorage.setItem(HK,JSON.stringify(h));renderHist()}
+function addHist(e){var h=getHist();h.unshift(e);if(h.length>20)h.length=20;localStorage.setItem(HK,JSON.stringify(h));window._fbSet('config/history',h);renderHist()}
 function renderHist(){
   var h=getHist(),list=document.getElementById('historyList'),empty=document.getElementById('emptyHistory');
   if(!h.length){empty.style.display='block';list.innerHTML='';return}
   empty.style.display='none';var html='';
   for(var i=0;i<h.length;i++){var x=h[i],d=new Date(x.time),ds=d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     var lk=x.url?' <a class="deploy-link" href="'+x.url+'" target="_blank" rel="noopener">ver</a>':'';
-    html+='<div class="deploy-item"><span class="status-dot '+(x.status==='ok'?'ok':'err')+'"></span><div class="deploy-info"><div class="deploy-file">'+(x.project||x.repo)+'</div><div class="deploy-meta">'+ds+' · '+x.branch+' · '+x.sha+lk+'</div><div class="deploy-meta" style="color:var(--muted);margin-top:1px">'+x.message+'</div></div></div>'}
+    html+='<div class="deploy-item"><span class="status-dot '+(x.status==='ok'?'ok':'err')+'"></span><div class="deploy-info"><div class="deploy-file">'+(x.project||x.repo)+'</div><div class="deploy-meta">'+ds+' \u00B7 '+x.branch+' \u00B7 '+x.sha+lk+'</div><div class="deploy-meta" style="color:var(--muted);margin-top:1px">'+x.message+'</div></div></div>'}
   list.innerHTML=html
 }
 
-/* ── Init ── */
-renderToken();renderProjects();renderHist();
+/* ── Init: check session ── */
+if(checkSession()){showApp()}
+</script>
+
+<!-- Firebase module (loads async, syncs data) -->
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import{getDatabase,ref,onValue,set}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+try{
+  var app=initializeApp({apiKey:"AIzaSyCv2YsaTAj38o55M8nBbZ_3s939XWLAmM4",authDomain:"fiobras-preco.firebaseapp.com",databaseURL:"https://fiobras-preco-default-rtdb.firebaseio.com",projectId:"fiobras-preco",storageBucket:"fiobras-preco.firebasestorage.app",messagingSenderId:"828256608601",appId:"1:828256608601:web:8e73fde16eaa9ad5882c48"});
+  var db=getDatabase(app);
+  // Firebase set helper
+  window._fbSet=function(path,val){set(ref(db,'deployer/'+path),val).catch(function(e){console.error('FB:',e)})};
+  // Seed default auth credentials if not exist
+  onValue(ref(db,'deployer/auth'),function(snap){
+    var val=snap.val();
+    if(!val){set(ref(db,'deployer/auth'),{user:'admin',pass:'optimizer'});window._fbAuth={user:'admin',pass:'optimizer'}}
+    else{window._fbAuth=val}
+  });
+  // Sync token
+  onValue(ref(db,'deployer/config/token'),function(snap){
+    var val=snap.val();
+    if(val){localStorage.setItem('fbd_token',val);if(typeof renderToken==='function')renderToken()}
+  });
+  // Sync history
+  onValue(ref(db,'deployer/config/history'),function(snap){
+    var val=snap.val();
+    if(val&&Array.isArray(val)){localStorage.setItem('fbd_history',JSON.stringify(val));if(typeof renderHist==='function')renderHist()}
+  });
+}catch(e){console.error('Firebase init error:',e)}
 </script>
 </body>
 </html>
